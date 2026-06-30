@@ -73,6 +73,6 @@ clip.mjs       ← 獨立 CLI 舊版工具，未共用 clipCore（自帶 fetch /
 - 作者主串 vs 留言的判定：每個 edge 只取「開頭連續、且作者與主貼文相同」的貼文；如此可排除別人的留言與作者對留言的零星回覆
 - Threads 筆記標題取第一段內文的首行；`published` 取第一段發文時間；各段圖片（`image_versions2` 取最大張、`carousel_media` 逐張）內嵌於該段文字後
 - Frontmatter 欄位為選填（null 欄位 filter 掉，不輸出空值）
-- `clipCore` 檔名格式：`YYYY-MM-DD 標題.md`，tags 為 ``；`clip.mjs` 則是 `標題.md`、tags 僅 `clippings`
+- `clipCore` 檔名格式：`標題.md`，frontmatter 含 `created` 欄位，tags 為 ``；`clip.mjs` 則是 `標題.md`、tags 僅 `clippings`；同名檔案由 `saveToVault()` 自動加 `-2`、`-3`… 後綴避免覆蓋
 - 特殊字元由 `safeFileName()` 移除（最長 100 字元）
 - 偵測連結僅限 Threads（`threads.net` / `threads.com`），由 `THREADS_URL_REGEX` 比對

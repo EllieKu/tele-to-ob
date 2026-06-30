@@ -21,16 +21,15 @@ function safeFileName(title = 'Untitled') {
 
 // 組 YAML frontmatter（null 欄位自動略過）
 function buildFrontmatter(fields) {
-  const clippedDate = new Date().toISOString().split('T')[0];
+  const createdDate = new Date().toISOString().split('T')[0];
   return [
     '---',
     `title: "${escapeYaml(fields.title ?? '')}"`,
     `source: "${fields.source}"`,
     fields.author      ? `author: "${escapeYaml(fields.author)}"` : null,
-    fields.site         ? `site: "${escapeYaml(fields.site)}"` : null,
     fields.description  ? `description: "${escapeYaml(fields.description)}"` : null,
     fields.published    ? `published: "${fields.published}"` : null,
-    `clipped: "${clippedDate}"`,
+    `created: "${createdDate}"`,
     fields.image        ? `image: "${fields.image}"` : null,
     `tags:`,
     '---',
@@ -48,7 +47,6 @@ function titleFromText(text = '') {
  */
 function buildThreadsNote(url, thread) {
   const { author, segments } = thread;
-  const clippedDate = new Date().toISOString().split('T')[0];
   const title = titleFromText(segments[0].text) || `@${author} on Threads`;
   const published = segments[0].takenAt
     ? new Date(segments[0].takenAt * 1000).toISOString().split('T')[0]
@@ -66,13 +64,12 @@ function buildThreadsNote(url, thread) {
     title,
     source: url,
     author: `@${author}`,
-    site: 'Threads',
     published,
     image: segments.flatMap((s) => s.media)[0] ?? null,
   });
 
   const noteContent = [frontmatter, '', `# ${title}`, '', body].join('\n');
-  const fileName = `${clippedDate} ${safeFileName(title)}.md`;
+  const fileName = `${safeFileName(title)}.md`;
   const meta = { title, author: `@${author}`, wordCount: body.length, segments: segments.length };
   return { noteContent, fileName, meta };
 }
@@ -100,7 +97,6 @@ export async function clipUrl(url) {
   if (thread.found) return buildThreadsNote(url, thread);
 
   // 2. 退回 Defuddle
-  const clippedDate = new Date().toISOString().split('T')[0];
   const { document } = parseHTML(html);
   const result = await Defuddle(document, url, { markdown: true, url });
 
@@ -108,7 +104,6 @@ export async function clipUrl(url) {
     title: result.title,
     source: url,
     author: result.author,
-    site: result.site,
     description: result.description,
     published: result.published,
     image: result.image,
@@ -122,7 +117,7 @@ export async function clipUrl(url) {
     result.content || '（無法萃取內容，可能需要登入或為動態載入頁面）',
   ].join('\n');
 
-  const fileName = `${clippedDate} ${safeFileName(result.title)}.md`;
+  const fileName = `${safeFileName(result.title)}.md`;
 
   return { noteContent, fileName, meta: result };
 }
@@ -133,7 +128,16 @@ export async function clipUrl(url) {
 export function saveToVault(vaultPath, folder, fileName, content) {
   const dir = join(vaultPath, folder);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const filePath = join(dir, fileName);
+
+  // 同名檔案不覆蓋：已存在就加上 -2、-3… 後綴
+  const dotIdx = fileName.lastIndexOf('.');
+  const base = dotIdx === -1 ? fileName : fileName.slice(0, dotIdx);
+  const ext = dotIdx === -1 ? '' : fileName.slice(dotIdx);
+  let filePath = join(dir, fileName);
+  for (let n = 2; existsSync(filePath); n++) {
+    filePath = join(dir, `${base}-${n}${ext}`);
+  }
+
   writeFileSync(filePath, content, 'utf8');
   return filePath;
 }
