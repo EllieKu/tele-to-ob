@@ -79,13 +79,13 @@ async function clipUrlWithRetry(url, onAttemptFail) {
   throw lastErr;
 }
 
-// ── 比對 Threads 連結 ──────────────────────────────────────
-const THREADS_URL_REGEX = /https?:\/\/(www\.)?threads\.(net|com)\/[^\s]+/gi;
+// ── 比對連結（通用網址；Threads 自動走多段萃取，其他網站退回 Defuddle）──
+const URL_REGEX = /https?:\/\/[^\s]+/gi;
 
 // polling: true → 啟動時自動補抓離線期間累積的訊息，之後持續監聽新訊息
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
-console.log('🤖 Bot 已啟動，等待 Threads 連結...');
+console.log('🤖 Bot 已啟動，等待連結...');
 console.log(`   白名單用戶：${ALLOWED_USER_IDS.length > 0 ? ALLOWED_USER_IDS.join(', ') : '（未設定，將拒絕所有請求）'}`);
 if (GROUP_ID) console.log(`   限定群組 chat id：${GROUP_ID}`);
 
@@ -104,8 +104,8 @@ bot.on('message', async (msg) => {
   // 2. 選填：限定特定群組（私聊用不到，但保留彈性）
   if (GROUP_ID && String(chatId) !== String(GROUP_ID)) return;
 
-  // 3. 找出訊息裡的 Threads 連結
-  const links = text.match(THREADS_URL_REGEX);
+  // 3. 找出訊息裡的所有網址
+  const links = text.match(URL_REGEX);
   if (!links || links.length === 0) return;
 
   for (const link of links) {

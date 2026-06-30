@@ -50,11 +50,11 @@ node test-clip.mjs <URL> --full   # 完整 Markdown
 threadsExtract.mjs ← 通用 Threads 萃取器：解析頁面嵌入 JSON 的 edges → 抽出「作者連續貼文串」
                      （每個 edge 取開頭連續的作者貼文，遇別人留言即停）→ 依時間排序，含每段圖片
      ↑（被 clipCore.mjs 使用）
-clipCore.mjs   ← 核心：fetch URL → 先試 threadsExtract（Threads 多段）→ 接成 Markdown
-                 抓不到才退回 linkedom + Defuddle → 組 YAML frontmatter + Markdown
+clipCore.mjs   ← 核心：fetch URL → 用網址判斷（isThreadsUrl）：Threads 連結走 threadsExtract（多段）→ 接成 Markdown
+                 非 Threads（或 Threads 結構抓不到）退回 linkedom + Defuddle → 組 YAML frontmatter + Markdown
                  並提供 saveToVault()，用 writeFileSync 直接寫入 Vault
      ↑（被 bot.mjs 與 retry-failed.mjs 共用）
-bot.mjs        ← 常駐：Telegram long polling → 白名單驗證 → 偵測 Threads 連結
+bot.mjs        ← 常駐：Telegram long polling → 白名單驗證 → 偵測訊息中的網址（通用 URL）
                  → 呼叫 clipCore.clipUrl + saveToVault 寫入 Vault
                  └→ 失敗自動重試 2 次（間隔 3 秒）→ 仍失敗寫 failed.log（JSON Lines）
 retry-failed.mjs ← 讀 failed.log → 逐筆重呼叫 clipUrl + saveToVault → 成功則從 log 移除
@@ -75,4 +75,5 @@ clip.mjs       ← 獨立 CLI 舊版工具，未共用 clipCore（自帶 fetch /
 - Frontmatter 欄位為選填（null 欄位 filter 掉，不輸出空值）
 - `clipCore` 檔名格式：`標題.md`，frontmatter 含 `created` 欄位，tags 為 ``；`clip.mjs` 則是 `標題.md`、tags 僅 `clippings`；同名檔案由 `saveToVault()` 自動加 `-2`、`-3`… 後綴避免覆蓋
 - 特殊字元由 `safeFileName()` 移除（最長 100 字元）
-- 偵測連結僅限 Threads（`threads.net` / `threads.com`），由 `THREADS_URL_REGEX` 比對
+- `bot.mjs` 偵測訊息中的所有網址（通用 `URL_REGEX`），任何 `http/https` 連結都會處理
+- 擷取方法由網址決定：`clipCore.isThreadsUrl()` 用 `new URL().hostname` 比對 `threads.net` / `threads.com`（含 `www.`）；是 Threads 才跑多段萃取，否則直接走 Defuddle

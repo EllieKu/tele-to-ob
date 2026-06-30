@@ -7,6 +7,16 @@ import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { extractThreadsThread } from './threadsExtract.mjs';
 
+// 用網址判斷是否為 Threads 連結，決定擷取方法
+const THREADS_HOST_REGEX = /^(www\.)?threads\.(net|com)$/i;
+function isThreadsUrl(url) {
+  try {
+    return THREADS_HOST_REGEX.test(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
 function escapeYaml(str = '') {
   return str.replace(/"/g, '\\"').replace(/\n/g, ' ');
 }
@@ -92,11 +102,13 @@ export async function clipUrl(url) {
 
   const html = await res.text();
 
-  // 1. 先試 Threads 多段萃取
-  const thread = extractThreadsThread(html, url);
-  if (thread.found) return buildThreadsNote(url, thread);
+  // 1. Threads 連結才走多段萃取
+  if (isThreadsUrl(url)) {
+    const thread = extractThreadsThread(html, url);
+    if (thread.found) return buildThreadsNote(url, thread);
+  }
 
-  // 2. 退回 Defuddle
+  // 2. 其他網站（或 Threads 結構抓不到）退回 Defuddle
   const { document } = parseHTML(html);
   const result = await Defuddle(document, url, { markdown: true, url });
 
