@@ -1,10 +1,5 @@
 /**
- * test-clip.mjs — 測試單一 URL 的抓取/解析結果（不經過 Telegram、不寫入 Vault）
- *
- * 用法：
- *   node test-clip.mjs <URL>            # 預覽解析結果（meta + 內容前段）
- *   node test-clip.mjs <URL> --full     # 印出完整 Markdown
- *   node test-clip.mjs <URL> --save     # 另存一份到 scratchpad/輸出檔，方便用編輯器看
+ * 測試單一 URL 的抓取/解析結果
  */
 
 import { clipUrl } from './clipCore.mjs';

@@ -2,14 +2,6 @@
  * bot.mjs — 常駐程式：監聽 Telegram 私聊或群組，偵測 Threads 連結，
  *           自動用 Defuddle 抓取並寫入 Obsidian Vault。
  *
- * 用法：
- *   1. cp .env.example .env，填入設定
- *   2. node bot.mjs
- *
- * 安全：只有 TELEGRAM_ALLOWED_USER_IDS 白名單內的用戶可以觸發抓取，
- *       其他人傳訊息給 Bot 會被靜默忽略。
- *
- * 開機自動啟動建議用 pm2（見 README）。
  */
 
 import TelegramBot from 'node-telegram-bot-api';
@@ -19,7 +11,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
-// ── 設定（從 .env 讀取）────────────────────────────────────
+// ── 設定 ────────────────────────────────────
 const BOT_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
 const GROUP_ID    = process.env.TELEGRAM_GROUP_ID;       // 選填：限定特定群組 chat id
 const VAULT_PATH  = process.env.OBSIDIAN_VAULT_PATH;     // vault 的本機絕對路徑
@@ -28,9 +20,6 @@ const FAILED_LOG  = join(dirname(fileURLToPath(import.meta.url)), 'failed.log');
 const MAX_RETRIES = 2;     // 失敗後自動重試次數（不含第一次嘗試）
 const RETRY_DELAY = 3000;  // 每次重試間隔（毫秒）
 
-// 白名單：允許觸發抓取的 Telegram user id（逗號分隔，支援多人）
-// 取得方式：傳訊息給 @userinfobot，它會回覆你的 user id
-// 若未設定 → 啟動時警告，並拒絕所有請求（避免誤開放）
 const ALLOWED_USER_IDS = (process.env.TELEGRAM_ALLOWED_USER_IDS || '')
   .split(',')
   .map((s) => s.trim())

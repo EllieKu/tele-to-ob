@@ -1,9 +1,7 @@
 /**
- * clip.mjs — 用 Defuddle 抓取網頁，輸出與 Obsidian Web Clipper 完全相同的格式
+ * 用 Defuddle 抓取網頁，輸出與 Obsidian Web Clipper 完全相同的格式
  * 用法：node clip.mjs <URL> [vault名稱] [存放資料夾]
  *
- * 需要：npm install defuddle linkedom
- * package.json 須有 "type": "module"
  */
 
 import { Defuddle } from 'defuddle/node';

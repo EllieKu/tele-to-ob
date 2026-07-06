@@ -1,11 +1,5 @@
 /**
- * retry-failed.mjs — 批次重跑 failed.log 裡記錄的失敗連結
- *
- * 用法：
- *   node retry-failed.mjs              # 重跑全部失敗紀錄
- *   node retry-failed.mjs --dry-run    # 只列出會重跑哪些，不實際執行
- *
- * 成功的項目會從 failed.log 移除；仍失敗的項目會留在 failed.log（並更新錯誤訊息）。
+ * 批次重跑 failed.log 裡記錄的失敗連結
  */
 
 import { clipUrl, saveToVault } from './clipCore.mjs';

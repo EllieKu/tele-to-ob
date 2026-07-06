@@ -1,5 +1,5 @@
 /**
- * clipCore.mjs — 核心抓取邏輯（從 clip.mjs 拆出，供 bot.mjs 重複呼叫）
+ * 核心抓取邏輯（從 clip.mjs 拆出，供 bot.mjs 重複呼叫）
  */
 import { Defuddle } from 'defuddle/node';
 import { parseHTML } from 'linkedom';
