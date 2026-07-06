@@ -16,6 +16,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { clipUrl, saveToVault } from './clipCore.mjs';
 import { appendFileSync } from 'fs';
 import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
 // ── 設定（從 .env 讀取）────────────────────────────────────
@@ -23,7 +24,7 @@ const BOT_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
 const GROUP_ID    = process.env.TELEGRAM_GROUP_ID;       // 選填：限定特定群組 chat id
 const VAULT_PATH  = process.env.OBSIDIAN_VAULT_PATH;     // vault 的本機絕對路徑
 const CLIP_FOLDER = process.env.OBSIDIAN_CLIP_FOLDER || 'Clippings';
-const FAILED_LOG  = join(dirname(new URL(import.meta.url).pathname), 'failed.log');
+const FAILED_LOG  = join(dirname(fileURLToPath(import.meta.url)), 'failed.log');
 const MAX_RETRIES = 2;     // 失敗後自動重試次數（不含第一次嘗試）
 const RETRY_DELAY = 3000;  // 每次重試間隔（毫秒）
 

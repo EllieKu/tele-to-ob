@@ -11,11 +11,12 @@
 import { clipUrl, saveToVault } from './clipCore.mjs';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
 const VAULT_PATH  = process.env.OBSIDIAN_VAULT_PATH;
 const CLIP_FOLDER = process.env.OBSIDIAN_CLIP_FOLDER || 'Clippings';
-const FAILED_LOG  = join(dirname(new URL(import.meta.url).pathname), 'failed.log');
+const FAILED_LOG  = join(dirname(fileURLToPath(import.meta.url)), 'failed.log');
 const DRY_RUN     = process.argv.includes('--dry-run');
 
 if (!VAULT_PATH) {
