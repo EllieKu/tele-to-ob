@@ -16,6 +16,7 @@ const BOT_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
 const GROUP_ID    = process.env.TELEGRAM_GROUP_ID;       // 選填：限定特定群組 chat id
 const VAULT_PATH  = process.env.OBSIDIAN_VAULT_PATH;     // vault 的本機絕對路徑
 const CLIP_FOLDER = process.env.OBSIDIAN_CLIP_FOLDER || 'Clippings';
+const IMAGE_SAVE_PATH = process.env.TELEGRAM_IMAGE_SAVE_PATH; // 選填：圖片訊息的獨立存放路徑
 const FAILED_LOG  = join(dirname(fileURLToPath(import.meta.url)), 'failed.log');
 const MAX_RETRIES = 2;     // 失敗後自動重試次數（不含第一次嘗試）
 const RETRY_DELAY = 3000;  // 每次重試間隔（毫秒）
@@ -32,6 +33,10 @@ if (!BOT_TOKEN || !VAULT_PATH) {
 
 if (ALLOWED_USER_IDS.length === 0) {
   console.warn('⚠️  未設定 TELEGRAM_ALLOWED_USER_IDS，將拒絕所有請求。請設定你的 user id。');
+}
+
+if (!IMAGE_SAVE_PATH) {
+  console.warn('⚠️  未設定 TELEGRAM_IMAGE_SAVE_PATH，收到圖片訊息時將忽略。');
 }
 
 // ── 失敗紀錄（JSON Lines，每行一筆，方便之後用 retry-failed.mjs 重跑）──
@@ -69,6 +74,16 @@ async function clipUrlWithRetry(url, onAttemptFail) {
   throw lastErr;
 }
 
+// 下載 Telegram 圖片訊息的最高解析度版本
+async function downloadPhoto(fileId) {
+  const fileUrl = await bot.getFileLink(fileId);
+  const res = await fetch(fileUrl);
+  if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+  const buffer = Buffer.from(await res.arrayBuffer());
+  const ext = (new URL(fileUrl).pathname.match(/\.\w+$/) || ['.jpg'])[0];
+  return { buffer, ext };
+}
+
 // ── 比對連結（通用網址；Threads 自動走多段萃取，其他網站退回 Defuddle）──
 const URL_REGEX = /https?:\/\/[^\s]+/gi;
 
@@ -94,7 +109,27 @@ bot.on('message', async (msg) => {
   // 2. 選填：限定特定群組（私聊用不到，但保留彈性）
   if (GROUP_ID && String(chatId) !== String(GROUP_ID)) return;
 
-  // 3. 找出訊息裡的所有網址
+  // 3. 圖片訊息：存到 TELEGRAM_IMAGE_SAVE_PATH 指定的獨立資料夾
+  if (msg.photo && msg.photo.length > 0) {
+    if (!IMAGE_SAVE_PATH) {
+      console.warn('⚠️  收到圖片但未設定 TELEGRAM_IMAGE_SAVE_PATH，已略過');
+      return;
+    }
+    const photo = msg.photo[msg.photo.length - 1]; // 取最高解析度
+    try {
+      const { buffer, ext } = await downloadPhoto(photo.file_id);
+      const fileName = `${Date.now()}-${msg.message_id}${ext}`;
+      const savedPath = saveToVault(IMAGE_SAVE_PATH, '', fileName, buffer);
+      console.log(`✅ 圖片已存入：${savedPath}`);
+      await bot.sendMessage(chatId, `🖼️ 圖片已存入\n📄 ${fileName}`, { reply_to_message_id: msg.message_id });
+    } catch (err) {
+      console.error(`❌ 圖片儲存失敗：${err.message}`);
+      await bot.sendMessage(chatId, `❌ 圖片儲存失敗：${err.message}`, { reply_to_message_id: msg.message_id });
+    }
+    return;
+  }
+
+  // 4. 找出訊息裡的所有網址
   const links = text.match(URL_REGEX);
   if (!links || links.length === 0) return;
 

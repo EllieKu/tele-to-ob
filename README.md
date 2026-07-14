@@ -1,13 +1,12 @@
 # Tel To Ob
 
-連結傳給 Telegram bot 後，電腦上常駐的程式會自動抓取該連結內容後寫入本機 Obsidian。
+將傳送給 Telegram bot 的連結/圖片儲存在本機
 
-## 運作方式
-
-- Telegram 對話訊息佇列等待接收連結
-- 程式用 long polling 監聽訊息。重新程式啟動時會將離線期間累積的所有連結一次處理
-
----
+## 專案概述
+- Telegram 對話訊息佇列等待接收連結或圖片
+- 程式用 long polling 監聽訊息。重新程式啟動時會將離線期間累積的所有訊息一次處理
+- 訊息為連結 → 抓取內容解析成 Markdown，寫入 Obsidian Vault
+- 訊息為圖片 → 存到 `TELEGRAM_IMAGE_SAVE_PATH` 指定的獨立資料夾（未設定則忽略圖片）
 
 ## Quick Start
 ```bash
@@ -17,11 +16,12 @@ cp .env.example .env
 
 修改 `.env` (需先 Telegram 建立 bot, 並取得 ` Bot Token` 與 `User ID`)
 
+### 執行
 ```bash
 node bot.mjs 
 ```
 
-其他指令
+### 其他指令
 
 ```bash
 node retry-failed.mjs --dry-run   # 先看會重跑哪些（不執行）
