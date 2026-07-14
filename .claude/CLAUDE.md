@@ -38,6 +38,7 @@ node test-clip.mjs <URL> --save   # 輸出成檔案
 - **離線補抓**：`polling: true` 讓 bot 啟動時自動處理離線期間累積的訊息。
 - **不覆蓋同名檔**：`saveToVault` 對已存在檔名加 `-2`、`-3`… 後綴。
 - **frontmatter**：`buildFrontmatter` 對 null 欄位自動略過，`escapeYaml` 處理引號與換行。
+- **ESM 路徑解析**：取目前檔案路徑一律用 `fileURLToPath(import.meta.url)`，不要直接把 `import.meta.url`（`file://` URI）當路徑操作，否則 Windows 上會出錯（見 commit `1442ad4`）。
 
 ## Environment (.env)
 
