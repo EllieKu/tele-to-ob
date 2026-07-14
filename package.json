@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Telegram bot that auto-clips links to Obsidian",
   "dependencies": {
+    "@huggingface/transformers": "^3.0.0",
     "defuddle": "0.19.1",
     "dotenv": "16.0.0",
     "linkedom": "0.18.0",

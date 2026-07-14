@@ -6,6 +6,8 @@
 
 import TelegramBot from 'node-telegram-bot-api';
 import { clipUrl, saveToVault } from './clipCore.mjs';
+import { loadCategories, addCategory, removeCategory } from './categories.mjs';
+import { classifyImage } from './imageClassify.mjs';
 import { appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -109,7 +111,39 @@ bot.on('message', async (msg) => {
   // 2. 選填：限定特定群組（私聊用不到，但保留彈性）
   if (GROUP_ID && String(chatId) !== String(GROUP_ID)) return;
 
-  // 3. 圖片訊息：存到 TELEGRAM_IMAGE_SAVE_PATH 指定的獨立資料夾
+  // 3. 分類管理指令：/addimg /delimg /listimg
+  if (text.startsWith('/')) {
+    const [command, ...rest] = text.trim().split(/\s+/);
+    const arg = rest.join(' ');
+
+    if (command === '/addimg') {
+      if (!arg) {
+        await bot.sendMessage(chatId, '用法：/addimg <分類名稱>', { reply_to_message_id: msg.message_id });
+        return;
+      }
+      const list = addCategory(arg);
+      await bot.sendMessage(chatId, `✅ 已新增分類：${arg}\n目前分類：${list.join(', ') || '（無）'}`, { reply_to_message_id: msg.message_id });
+      return;
+    }
+
+    if (command === '/delimg') {
+      if (!arg) {
+        await bot.sendMessage(chatId, '用法：/delimg <分類名稱>', { reply_to_message_id: msg.message_id });
+        return;
+      }
+      const list = removeCategory(arg);
+      await bot.sendMessage(chatId, `✅ 已移除分類：${arg}\n目前分類：${list.join(', ') || '（無）'}`, { reply_to_message_id: msg.message_id });
+      return;
+    }
+
+    if (command === '/listimg') {
+      const list = loadCategories();
+      await bot.sendMessage(chatId, `🏷️ 目前分類：${list.join(', ') || '（無）'}`, { reply_to_message_id: msg.message_id });
+      return;
+    }
+  }
+
+  // 4. 圖片訊息：依分類結果存到 TELEGRAM_IMAGE_SAVE_PATH 下的對應子資料夾
   if (msg.photo && msg.photo.length > 0) {
     if (!IMAGE_SAVE_PATH) {
       console.warn('⚠️  收到圖片但未設定 TELEGRAM_IMAGE_SAVE_PATH，已略過');
@@ -119,9 +153,20 @@ bot.on('message', async (msg) => {
     try {
       const { buffer, ext } = await downloadPhoto(photo.file_id);
       const fileName = `${Date.now()}-${msg.message_id}${ext}`;
-      const savedPath = saveToVault(IMAGE_SAVE_PATH, '', fileName, buffer);
+
+      let category = null;
+      try {
+        const categories = loadCategories();
+        const mimeType = `image/${ext.replace('.', '').replace('jpg', 'jpeg') || 'jpeg'}`;
+        category = await classifyImage(buffer, categories, mimeType);
+      } catch (err) {
+        console.warn(`⚠️  圖片分類失敗，將存入未分類資料夾：${err.message}`);
+      }
+
+      const savedPath = saveToVault(IMAGE_SAVE_PATH, category || '', fileName, buffer);
+      const categoryInfo = category ? `（分類：${category}）` : '';
       console.log(`✅ 圖片已存入：${savedPath}`);
-      await bot.sendMessage(chatId, `🖼️ 圖片已存入\n📄 ${fileName}`, { reply_to_message_id: msg.message_id });
+      await bot.sendMessage(chatId, `🖼️ 圖片已存入${categoryInfo}\n📄 ${fileName}`, { reply_to_message_id: msg.message_id });
     } catch (err) {
       console.error(`❌ 圖片儲存失敗：${err.message}`);
       await bot.sendMessage(chatId, `❌ 圖片儲存失敗：${err.message}`, { reply_to_message_id: msg.message_id });
@@ -129,7 +174,7 @@ bot.on('message', async (msg) => {
     return;
   }
 
-  // 4. 找出訊息裡的所有網址
+  // 5. 找出訊息裡的所有網址
   const links = text.match(URL_REGEX);
   if (!links || links.length === 0) return;
 

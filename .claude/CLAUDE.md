@@ -34,6 +34,7 @@ node test-clip.mjs <URL> --save   # 輸出成檔案
 
 - **白名單**：`TELEGRAM_ALLOWED_USER_IDS` 未設定時會**拒絕所有請求**（安全預設）。非授權用戶靜默忽略。
 - **圖片訊息**：存到 `TELEGRAM_IMAGE_SAVE_PATH`（獨立於 Vault 的絕對路徑），只存檔案、不產生 Markdown 筆記。未設定該變數時忽略圖片訊息並印出警告。檔名格式 `時間戳-messageId.副檔名`。
+- **圖片自動分類**：分類清單透過 Telegram 指令動態管理（`/addimg`、`/delimg`、`/listimg`），存在本機 `categories.json`（[categories.mjs](../../categories.mjs)，未進版控）。收到圖片時用 [imageClassify.mjs](../../imageClassify.mjs) 呼叫 CLIP 模型（`@huggingface/transformers`，`Xenova/clip-vit-base-patch32`，zero-shot 圖片分類）比對圖片與各分類名稱的相似度，存入最相似分類的子資料夾；無分類或辨識失敗則回退存到 `TELEGRAM_IMAGE_SAVE_PATH` 根目錄。模型首次執行會自動從 Hugging Face Hub 下載並快取到本機。
 - **重試**：bot 內建 `MAX_RETRIES=2`（不含首次）、間隔 `RETRY_DELAY=3000ms`。全數失敗才寫入 `failed.log`（JSON Lines，每行一筆）。
 - **離線補抓**：`polling: true` 讓 bot 啟動時自動處理離線期間累積的訊息。
 - **不覆蓋同名檔**：`saveToVault` 對已存在檔名加 `-2`、`-3`… 後綴。

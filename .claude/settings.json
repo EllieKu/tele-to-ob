@@ -11,7 +11,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const cmd=(i.tool_input&&i.tool_input.command)||'';if(/git commit/.test(cmd)){console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',permissionDecision:'ask',permissionDecisionReason:'請先確認 commit message'}}))}})\""
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const i=JSON.parse(d);const cmd=(i.tool_input&&i.tool_input.command)||'';if(/\\bgit\\s+commit\\b/.test(cmd)&&/#\\s*via:my-commit\\s*$/.test(cmd)){console.log(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',permissionDecision:'ask',permissionDecisionReason:'請確認 commit message 內容'}}))}}catch(e){}})\""
           }
         ]
       }

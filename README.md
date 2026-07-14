@@ -29,4 +29,5 @@ node retry-failed.mjs             # 實際重跑，成功的會從 failed.log �
 node test-clip.mjs <URL>          # 終端機預覽 meta + 內容前段
 node test-clip.mjs <URL> --full   # 終端機預覽完整 Markdown
 node test-clip.mjs <URL> --save   # 編輯器輸出檔案
+node test-classify.mjs <圖片路徑>  # 測試圖片分類
 ```
