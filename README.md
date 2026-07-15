@@ -7,6 +7,7 @@
 - 程式用 long polling 監聽訊息。重新程式啟動時會將離線期間累積的所有訊息一次處理
 - 訊息為連結 → 抓取內容解析成 Markdown，寫入 Obsidian Vault
 - 訊息為圖片 → 存到 `TELEGRAM_IMAGE_SAVE_PATH` 指定的獨立資料夾（未設定則忽略圖片）
+- 使用 CLIP 模型辨識圖片並分類, 分類組別在 Telegram bot 中設定, 初次啟動需要花一點時間下載模型
 
 ## Quick Start
 ```bash
@@ -30,4 +31,11 @@ node test-clip.mjs <URL>          # 終端機預覽 meta + 內容前段
 node test-clip.mjs <URL> --full   # 終端機預覽完整 Markdown
 node test-clip.mjs <URL> --save   # 編輯器輸出檔案
 node test-classify.mjs <圖片路徑>  # 測試圖片分類
+```
+
+### Telegram bot設定圖片組別分類
+```
+/addimg: 新增
+/delimg: 刪除
+/listimg: 列出清單
 ```

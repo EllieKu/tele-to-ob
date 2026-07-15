@@ -1,0 +1,17 @@
+services:
+  bot:
+    build: .
+    env_file: .env
+    environment:
+      OBSIDIAN_VAULT_PATH: /vault
+      TELEGRAM_IMAGE_SAVE_PATH: /images
+    volumes:
+      - ${OBSIDIAN_VAULT_PATH}:/vault
+      - ${TELEGRAM_IMAGE_SAVE_PATH}:/images
+      - ./categories.json:/app/categories.json
+      - ./failed.log:/app/failed.log
+      - hf_cache:/app/node_modules/@huggingface/transformers/.cache
+    restart: unless-stopped
+
+volumes:
+  hf_cache:
