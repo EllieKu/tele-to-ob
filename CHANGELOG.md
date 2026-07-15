@@ -12,6 +12,7 @@
 
 ### Changed
 - 調整 git commit 前的 PreToolUse hook：不再強制所有 `git commit` 都要走 `/my-commit`，只有指令結尾帶 `# via:my-commit` 標記時才會跳出確認提示，避免略過確認直接提交
+- `categories.mjs` 新增分類清單記憶體快取，避免每次處理圖片都重複讀取 `categories.json`；調整 `addCategory` 改為前置判斷提早回傳，`removeCategory` 新增無變動時跳過磁碟寫入的短路邏輯，降低不必要的 I/O
 
 ### Security
 - 已知問題：`/addimg` 新增的分類名稱未做路徑驗證，若輸入含 `..` 的名稱，圖片分類存檔時可能寫到 `TELEGRAM_IMAGE_SAVE_PATH` 以外的路徑，待後續修補

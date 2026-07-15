@@ -16,14 +16,13 @@ function getClassifier() {
  * 依 CLIP zero-shot 分類，從 categories 裡選出與圖片最相似的分類名稱。
  * categories 為空陣列時回傳 null（呼叫端應視為「無分類」）。
  */
-export async function classifyImage(buffer, categories, mimeType = 'image/jpeg') {
+export async function classifyImage(buffer, categories) {
   if (!categories || categories.length === 0) return null;
 
   const classifier = await getClassifier();
-  const blob = new Blob([buffer], { type: mimeType });
+  const blob = new Blob([buffer], { type: 'image/jpeg' });
   const results = await classifier(blob, categories);
 
   if (!results || results.length === 0) return null;
-  const sorted = [...results].sort((a, b) => b.score - a.score);
-  return sorted[0].label;
+  return results.reduce((best, r) => (r.score > best.score ? r : best)).label;
 }

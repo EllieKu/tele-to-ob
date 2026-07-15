@@ -157,8 +157,7 @@ bot.on('message', async (msg) => {
       let category = null;
       try {
         const categories = loadCategories();
-        const mimeType = `image/${ext.replace('.', '').replace('jpg', 'jpeg') || 'jpeg'}`;
-        category = await classifyImage(buffer, categories, mimeType);
+        category = await classifyImage(buffer, categories);
       } catch (err) {
         console.warn(`⚠️  圖片分類失敗，將存入未分類資料夾：${err.message}`);
       }

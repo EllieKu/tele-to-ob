@@ -4,12 +4,16 @@ import { fileURLToPath } from 'url';
 
 const CATEGORIES_FILE = join(dirname(fileURLToPath(import.meta.url)), 'categories.json');
 
+let cache = null;
+
 export function loadCategories() {
+  if (cache) return cache;
   if (!existsSync(CATEGORIES_FILE)) return [];
   try {
     const raw = readFileSync(CATEGORIES_FILE, 'utf8');
     const list = JSON.parse(raw);
-    return Array.isArray(list) ? list : [];
+    cache = Array.isArray(list) ? list : [];
+    return cache;
   } catch (e) {
     console.error('⚠️  無法讀取 categories.json：', e.message);
     return [];
@@ -19,6 +23,7 @@ export function loadCategories() {
 export function saveCategories(list) {
   try {
     writeFileSync(CATEGORIES_FILE, JSON.stringify(list, null, 2), 'utf8');
+    cache = list;
   } catch (e) {
     console.error('⚠️  無法寫入 categories.json：', e.message);
   }
@@ -26,18 +31,17 @@ export function saveCategories(list) {
 
 export function addCategory(name) {
   const trimmed = name.trim();
-  if (!trimmed) return loadCategories();
   const list = loadCategories();
-  if (!list.includes(trimmed)) {
-    list.push(trimmed);
-    saveCategories(list);
-  }
+  if (!trimmed || list.includes(trimmed)) return list;
+  list.push(trimmed);
+  saveCategories(list);
   return list;
 }
 
 export function removeCategory(name) {
   const trimmed = name.trim();
-  const list = loadCategories().filter((c) => c !== trimmed);
-  saveCategories(list);
-  return list;
+  const list = loadCategories();
+  const filtered = list.filter((c) => c !== trimmed);
+  if (filtered.length !== list.length) saveCategories(filtered);
+  return filtered;
 }
