@@ -39,3 +39,14 @@ node test-classify.mjs <圖片路徑>  # 測試圖片分類
 /delimg: 刪除
 /listimg: 列出清單
 ```
+
+## Docker
+
+```bash
+cp categories.example.json categories.json
+touch failed.log
+docker-compose up -d
+```
+
+`categories.json`、`failed.log` 為個人資料，不進版控。第一次啟動前務必先建立這兩個檔案 —
+docker-compose 會把它們以單一檔案 bind mount 進容器，若 host 上該路徑不存在，Docker 會自動建立同名「資料夾」而非檔案，導致程式讀寫失敗。
