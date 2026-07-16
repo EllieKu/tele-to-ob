@@ -4,7 +4,7 @@
 import { Defuddle } from 'defuddle/node';
 import { parseHTML } from 'linkedom';
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, resolve, sep } from 'path';
 import { extractThreadsThread } from './threadsExtract.mjs';
 
 // 用網址判斷是否為 Threads 連結，決定擷取方法
@@ -138,16 +138,20 @@ export async function clipUrl(url) {
  * 直接寫入 Obsidian Vault 的資料夾（最可靠，不受 URI 長度限制）
  */
 export function saveToVault(vaultPath, folder, fileName, content) {
-  const dir = join(vaultPath, folder);
+  const base = resolve(vaultPath);
+  const dir = resolve(join(vaultPath, folder));
+  if (dir !== base && !dir.startsWith(base + sep)) {
+    throw new Error(`拒絕寫入 vault 以外的路徑：${dir}`);
+  }
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
   // 同名檔案不覆蓋：已存在就加上 -2、-3… 後綴
   const dotIdx = fileName.lastIndexOf('.');
-  const base = dotIdx === -1 ? fileName : fileName.slice(0, dotIdx);
+  const base2 = dotIdx === -1 ? fileName : fileName.slice(0, dotIdx);
   const ext = dotIdx === -1 ? '' : fileName.slice(dotIdx);
   let filePath = join(dir, fileName);
   for (let n = 2; existsSync(filePath); n++) {
-    filePath = join(dir, `${base}-${n}${ext}`);
+    filePath = join(dir, `${base2}-${n}${ext}`);
   }
 
   writeFileSync(filePath, content, 'utf8');

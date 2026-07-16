@@ -15,4 +15,5 @@
 - `categories.mjs` 新增分類清單記憶體快取，避免每次處理圖片都重複讀取 `categories.json`；調整 `addCategory` 改為前置判斷提早回傳，`removeCategory` 新增無變動時跳過磁碟寫入的短路邏輯，降低不必要的 I/O
 
 ### Security
-- 已知問題：`/addimg` 新增的分類名稱未做路徑驗證，若輸入含 `..` 的名稱，圖片分類存檔時可能寫到 `TELEGRAM_IMAGE_SAVE_PATH` 以外的路徑，待後續修補
+- 修補 `/addimg` 路徑注入風險：`categories.mjs` 的 `addCategory` 拒絕含 `/`、`\`、`..` 的分類名稱，並在 `bot.mjs` 顯示對應錯誤訊息給使用者，避免圖片分類存檔寫到 `TELEGRAM_IMAGE_SAVE_PATH` 以外的路徑
+- `clipCore.mjs` 的 `saveToVault` 新增寫入路徑檢查，確保目標資料夾必定落在 Vault 範圍內，防止路徑跳脫寫到 Vault 以外

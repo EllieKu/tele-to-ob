@@ -33,6 +33,7 @@ export function addCategory(name) {
   const trimmed = name.trim();
   const list = loadCategories();
   if (!trimmed || list.includes(trimmed)) return list;
+  if (/[/\\]|\.\./.test(trimmed)) throw new Error(`分類名稱不可包含路徑字元：${trimmed}`);
   list.push(trimmed);
   saveCategories(list);
   return list;

@@ -121,8 +121,12 @@ bot.on('message', async (msg) => {
         await bot.sendMessage(chatId, '用法：/addimg <分類名稱>', { reply_to_message_id: msg.message_id });
         return;
       }
-      const list = addCategory(arg);
-      await bot.sendMessage(chatId, `✅ 已新增分類：${arg}\n目前分類：${list.join(', ') || '（無）'}`, { reply_to_message_id: msg.message_id });
+      try {
+        const list = addCategory(arg);
+        await bot.sendMessage(chatId, `✅ 已新增分類：${arg}\n目前分類：${list.join(', ') || '（無）'}`, { reply_to_message_id: msg.message_id });
+      } catch (err) {
+        await bot.sendMessage(chatId, `❌ ${err.message}`, { reply_to_message_id: msg.message_id });
+      }
       return;
     }
 
